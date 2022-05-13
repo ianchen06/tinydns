@@ -27,6 +27,14 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		if ok {
 			msg.Answer = append(msg.Answer, &dns.A{Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
 				A: net.ParseIP(addr)})
+		} else {
+			m := new(dns.Msg)
+			m.SetQuestion(r.Question[0].Name, dns.TypeA)
+			r, err := dns.Exchange(m, "8.8.8.8:53")
+			if err != nil {
+				log.Fatal("error", err)
+			}
+			msg.Answer = append(msg.Answer, r.Answer...)
 		}
 	}
 	w.WriteMsg(&msg)
